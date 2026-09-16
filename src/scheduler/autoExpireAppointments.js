@@ -1,3 +1,4 @@
+import Appointment from "../../DB/models/booking.model.js";
 export const autoExpireAppointments = async () => {
   try {
     const now = new Date();

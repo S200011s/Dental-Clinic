@@ -10,6 +10,7 @@ import GalleryImage from "../../../DB/models/Gallery.model.js";
 import ReviewClinic from "../../../DB/models/reviewClinic.model.js";
 import { sendDoctorReviewApprovalEmail, sendDoctorReviewRejectionEmail, sendClinicReviewApprovalEmail,sendClinicReviewRejectionEmail } from "../../../src/services/email.service.js";
 import bcrypt from "bcryptjs";
+import { rebuildSlugCache } from "../Slug/slug.controller.js";
 
 /* ----------------- Doctor Management ----------------- */
 
@@ -127,6 +128,7 @@ export const createDoctor = async (req, res, next) => {
     }
 
     await session.commitTransaction();
+    await rebuildSlugCache();
 
     res.status(201).json({
       message: "Doctor and User account created successfully",
@@ -254,7 +256,7 @@ export const updateDoctor = async (req, res, next) => {
         runValidators: true,
       }
     ).populate("services");
-
+await rebuildSlugCache();
     res.status(200).json({
       message: "Doctor updated successfully",
       doctor: updatedDoctor,
@@ -305,6 +307,7 @@ export const deleteDoctorById = async (req, res, next) => {
     }
     await Doctor.findByIdAndDelete(doctorId).session(session);
     await session.commitTransaction();
+    await rebuildSlugCache();
     res.status(200).json({
       message: "Doctor and related data deleted successfully",
       doctor,
@@ -361,6 +364,7 @@ export const createServices = async (req, res, next) => {
         { $addToSet: { services: newService._id } }
       );
     }
+    await rebuildSlugCache();
     res.status(201).json({
       message: "Service created successfully",
       service: newService,
@@ -456,7 +460,7 @@ export const updateService = async (req, res, next) => {
         );
       }
     }
-
+await rebuildSlugCache();
     return res.status(200).json({
       message: "Service updated successfully",
       service: updatedService,
@@ -492,7 +496,7 @@ export const deleteServiceById = async (req, res, next) => {
 
     await Service.findByIdAndDelete(req.params.id).session(session);
     await session.commitTransaction();
-
+await rebuildSlugCache();
     res.status(200).json(deleteService);
   } catch (err) {
     await session.abortTransaction();

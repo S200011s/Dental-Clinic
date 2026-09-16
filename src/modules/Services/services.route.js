@@ -6,6 +6,8 @@ const router = express.Router();
 
 router.get("/", serviceController.getAllServices);
 
+router.get("/top-rated", serviceController.getTopRatedDoctors);
+
 router.get(
   "/:id",
   validateParams(servicesIdSchema),
@@ -13,6 +15,5 @@ router.get(
 );
 
 
-router.get("/",serviceController.getTopRatedDoctors)
 
 export default router;

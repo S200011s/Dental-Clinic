@@ -1,12 +1,14 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import mongoose from "mongoose";
+
+import db_connection from "./DB/DB-connection.js";
 // import dotenv from "dotenv";
 import "./DB/models/service.model.js";
 import "./DB/models/user.model.js";
 import "./DB/models/booking.model.js";
 import { errorHandler } from "./src/middleware/errorHandllingMiddleware.js";
-import db_connection from "./DB/DB-connection.js";
 import AuthRoutes from "./src/modules/Auth/Auth.route.js";
 import dashboardRoutes from "./src/modules/Dashboard/dashboard.route.js";
 import userInfo from "./src/modules/User/User.route.js";
@@ -24,6 +26,8 @@ import { stripeWebhook } from "./src/utils/stripeWebhook.js";
 import statsRoutes from "./src/modules/Stats/Stats.route.js";
 import reviewRoutes from "./src/modules/review/review.routes.js";
 import galleryRoutes from "./src/modules/Gallery/gallery.route.js";
+
+import slugRoutes from "./src/modules/Slug/slug.route.js";
 
 import * as reviewController from "./src/modules/review/review.controller.js";
 // dotenv.config();
@@ -80,25 +84,32 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
-/* --------------------------- Run every 15 mins/ reminders (cron) --------------------------- */
-cron.schedule("*/15 * * * *", () => {
-  console.log("⏱️ Running auto-complete appointment task...");
-  autoCompleteAppointments();
-});
+// /* --------------------------- Run every 15 mins/ reminders (cron) --------------------------- */
+// cron.schedule("*/15 * * * *", () => {
+//   console.log("⏱️ Running auto-complete appointment task...");
+//   autoCompleteAppointments();
+// });
 
-cron.schedule("*/10 * * * *", () => {
-  console.log("⏰ Sending appointment reminders...");
-  sendReminders();
-});
+// cron.schedule("*/10 * * * *", () => {
+//   console.log("⏰ Sending appointment reminders...");
+//   sendReminders();
+// });
 
 
-cron.schedule('*/15 * * * *', () => {
-  console.log('🕒 Running auto-expire appointment task...');
-  autoExpireAppointments();
-});
+// cron.schedule('*/15 * * * *', () => {
+//   console.log('🕒 Running auto-expire appointment task...');
+//   autoExpireAppointments();
+// });
 /* --------------------------- Connect to MongoDB --------------------------- */
-db_connection();
-/* --------------------------------- Routes --------------------------------- */
+app.use(async (req, res, next) => {
+  try {
+    await db_connection();
+    next();
+  } catch (err) {
+    console.error("DB unavailable:", err.message);
+    res.status(503).json({ error: "Database unavailable, please retry." });
+  }
+});/* --------------------------------- Routes --------------------------------- */
 app.use("/api/auth", AuthRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/user", userInfo);
@@ -112,7 +123,22 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/gallery", galleryRoutes);
 
 app.use("/api/review", reviewRoutes);
+
+app.use("/api/slug", slugRoutes);
+
 /* ------------------------ Error Handling from middleWare  ----------------------- */
 app.use(errorHandler);
+
+if (!process.env.VERCEL) {
+  cron.schedule("*/15 * * * *", () => autoCompleteAppointments());
+  cron.schedule("*/10 * * * *", () => sendReminders());
+  cron.schedule("*/15 * * * *", () => autoExpireAppointments());
+}
+
+/* --------------------------- Local dev server --------------------------- */
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`✅ Server on http://localhost:${PORT}`));
+}
 
 export default app;
