@@ -1,0 +1,144 @@
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+
+import db_connection from "./DB/DB-connection.js";
+// import dotenv from "dotenv";
+import "./DB/models/service.model.js";
+import "./DB/models/user.model.js";
+import "./DB/models/booking.model.js";
+import { errorHandler } from "./src/middleware/errorHandllingMiddleware.js";
+import AuthRoutes from "./src/modules/Auth/Auth.route.js";
+import dashboardRoutes from "./src/modules/Dashboard/dashboard.route.js";
+import userInfo from "./src/modules/User/User.route.js";
+import doctorInfo from "./src/modules/Doctor/doctor.route.js";
+import services from "./src/modules/Services/services.route.js";
+import category from "./src/modules/serviceCategory/serviceCategory.route.js";
+import searchRoutes from "./src/modules/Search/search.route.js";
+import cron from 'node-cron';
+import { autoCompleteAppointments } from './src/scheduler/autoCompleteAppointments.js';
+import { sendReminders } from './src/scheduler/sendReminders.js';
+import { autoExpireAppointments } from './src/scheduler/autoExpireAppointments.js';
+import appointmentInfo from "./src/modules/Appointment/Appointment.route.js";
+import paymentRoutes from "./src/modules/Payment/Payment.route.js";
+import { stripeWebhook } from "./src/utils/stripeWebhook.js";
+import statsRoutes from "./src/modules/Stats/Stats.route.js";
+import reviewRoutes from "./src/modules/review/review.routes.js";
+import galleryRoutes from "./src/modules/Gallery/gallery.route.js";
+
+import slugRoutes from "./src/modules/Slug/slug.route.js";
+
+import * as reviewController from "./src/modules/review/review.controller.js";
+// dotenv.config();
+
+// Environment validation
+const requiredEnvVars = [
+  'atlas_URL',
+  'JWT_SECRET',
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET'
+];
+
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+if (missingEnvVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingEnvVars);
+  process.exit(1);
+}
+
+const app = express();
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests without origin (Postman, mobile apps, etc.)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ CORS blocked:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+app.post(
+  "/webhook/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebhook
+);
+
+
+app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
+
+// /* --------------------------- Run every 15 mins/ reminders (cron) --------------------------- */
+// cron.schedule("*/15 * * * *", () => {
+//   console.log("⏱️ Running auto-complete appointment task...");
+//   autoCompleteAppointments();
+// });
+
+// cron.schedule("*/10 * * * *", () => {
+//   console.log("⏰ Sending appointment reminders...");
+//   sendReminders();
+// });
+
+
+// cron.schedule('*/15 * * * *', () => {
+//   console.log('🕒 Running auto-expire appointment task...');
+//   autoExpireAppointments();
+// });
+/* --------------------------- Connect to MongoDB --------------------------- */
+app.use(async (req, res, next) => {
+  try {
+    await db_connection();
+    next();
+  } catch (err) {
+    console.error("DB unavailable:", err.message);
+    res.status(503).json({ error: "Database unavailable, please retry." });
+  }
+});/* --------------------------------- Routes --------------------------------- */
+app.use("/api/auth", AuthRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/user", userInfo);
+app.use("/api/doctors", doctorInfo);
+app.use("/api/services", services);
+app.use("/api/category", category);
+app.use("/api/search", searchRoutes);
+app.use("/api/appointment", appointmentInfo);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/stats", statsRoutes);
+app.use("/api/gallery", galleryRoutes);
+
+app.use("/api/review", reviewRoutes);
+
+app.use("/api/slug", slugRoutes);
+
+/* ------------------------ Error Handling from middleWare  ----------------------- */
+app.use(errorHandler);
+
+if (!process.env.VERCEL) {
+  cron.schedule("*/15 * * * *", () => autoCompleteAppointments());
+  cron.schedule("*/10 * * * *", () => sendReminders());
+  cron.schedule("*/15 * * * *", () => autoExpireAppointments());
+}
+
+/* --------------------------- Local dev server --------------------------- */
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`✅ Server on http://localhost:${PORT}`));
+}
+
+export default app;
