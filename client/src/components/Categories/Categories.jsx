@@ -37,7 +37,7 @@ const Categories = () => {
                 alt="dessert-bloom image"
               />
               <p>
-                <span>Dr. Sarah Bennett</span>
+                <span>Dr. Laila Rashad</span>
                 <span className="_Spatial">Lead Dentist</span>
               </p>
             </div>
@@ -47,7 +47,7 @@ const Categories = () => {
                 alt="dessert-bloom image"
               />
               <p>
-                <span>Dr. Maya Lin</span>
+                <span>Dr. Sara Abdullah</span>
                 <span className="_Spatial">Cosmetic Dentist</span>
               </p>
             </div>
@@ -57,7 +57,7 @@ const Categories = () => {
                 alt="dessert-bloom image"
               />
               <p>
-                <span>Dr. Michael Reyes</span>
+                <span>Dr. Omar Hassan</span>
                 <span className="_Spatial">Pediatric Specialist</span>
               </p>
             </div>
@@ -67,7 +67,7 @@ const Categories = () => {
                 alt="dessert-bloom image"
               />
               <p>
-                <span>Dr. James Carter</span>
+                <span>Dr. Khaled Mostafa</span>
                 <span className="_Spatial">Dental Hygienist</span>
               </p>
             </div>
