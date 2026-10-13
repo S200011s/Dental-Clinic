@@ -1,29 +1,47 @@
-# 🛠️ white Teeth
+# 🦷 Dentia — Backend API
 
-### 🛒 Dental Clinic Backend (Node.js)
+Node.js + Express + MongoDB REST API powering the [Dentia dental clinic platform](https://dental-c-linic.vercel.app). Handles authentication, doctors, services, appointments, reviews, and simulated payments.
 
-A lightweight Dental Clinic backend built with **Node.js**, **Express**, and **MongoDB**.  
-Designed to simplify the management of patients, appointments, doctors, and services, while providing a smooth user experience and a clean API — as part of the ITI Graduation Project.
-
----
-
-## 🔥 Features
-
-- ✅ **JWT Authentication** (Login / Register)
-- 🧾 **CRUD Operations**
-- 🔍 **Search Functionality with Pagination and Sorting**
-- 🔒 **Input Validation** using Joi
-- 🌐 **CORS Enabled** for frontend integration
-- 📜 **Clean & Modular Codebase**
+🔗 **Live API:** https://dental-c-linic.vercel.app/
+🌐 **Frontend Repo:** [Dental-Clinic / client](https://github.com/S200011s/Dental-Clinic/tree/main/client)
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT authentication
+- Joi validation
+- Nodemailer (email notifications)
+- Cloudinary (image uploads)
+- Stripe (test mode)
+- bcrypt
+- Deployed on Vercel + MongoDB Atlas
 
-- **Node.js** + **Express.js**
-- **MongoDB** + **Mongoose**
-- **JWT** for secure authentication
-- **Joi** for request validation
-- **dotenv**
-- **morgan**
-- **CORS**
+---
+
+## Setup
+
+```bash
+npm install
+
+Features
+JWT auth (register / login / profile / password reset)
+
+CRUD for doctors, services, appointments
+
+Search + pagination + sorting (doctors, services)
+
+Joi validation on all write routes
+
+Appointment status flow: pending → confirmed | cancelled
+
+Reviews tied to completed appointments
+
+Email notifications on booking events
+
+Stripe test-mode checkout
+
+Cloudinary image uploads
+
+CORS enabled for the deployed frontend
